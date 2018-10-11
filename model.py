@@ -25,19 +25,23 @@ def load_data():
     for i in range(1, len(lines)):
         line = lines[i]
         
+        # get images from the three cameras
         image_center = ndimage.imread(data_path + 'IMG/' + line[0].split('/')[-1])
         image_left = ndimage.imread(data_path + 'IMG/' + line[1].split('/')[-1])
         image_right = ndimage.imread(data_path + 'IMG/' + line[2].split('/')[-1])
         
+        # flip all images
         flipped_image_center = np.fliplr(image_center)
         flipped_image_left = np.fliplr(image_left)
         flipped_image_right = np.fliplr(image_right)
         
+        # set steering angle for the three camera images
         steering_center = float(line[3])
         correction = 0.2 # this is a parameter to tune
         steering_left = steering_center + correction
         steering_right = steering_center - correction
         
+        # set steering angle for the three flipped images
         flipped_steering_center = -steering_center
         flipped_steering_left = -steering_left
         flipped_steering_right = -steering_right
@@ -49,8 +53,10 @@ def load_data():
     y_train = np.array(measurements)
     return X_train, y_train
 
+# load dataset
 X_train, y_train = load_data()
 
+# define the model architecture
 model = Sequential()
 model.add(Cropping2D(cropping=((50,20), (0,0)), input_shape=(160,320,3)))
 model.add(Lambda(lambda x: (x / 255.0) - 0.5))
@@ -75,7 +81,7 @@ model.add(Dense(50))
 model.add(Activation('relu'))
 model.add(Dense(1))
 
-# compile and fit model
+# compile, fit and save model
 model.compile('adam', 'mse', ['mae'])
 history = model.fit(X_train, y_train, epochs=10, validation_split=0.2, shuffle=True)
 model.save('model.h5')
